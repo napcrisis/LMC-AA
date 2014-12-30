@@ -1,0 +1,341 @@
+<html>
+	<head>
+		<script src="js/jquery-2.1.3.js"></script>
+		<!-- Latest compiled and minified CSS -->
+		<link rel="stylesheet" href="css/bootstrap.min.css">
+
+		<!-- Optional theme -->
+		<link rel="stylesheet" href="css/bootstrap-theme.min.css">
+
+		<!-- Latest compiled and minified JavaScript -->
+		<script src="js/bootstrap.min.js"></script>
+		<style>
+			html, body { height: 100%; width: 100%; margin: 0; }
+			.rowdiv { height: 20%; width: 100%; }
+
+			.greyedboxes {background: #999; height: 100%; }
+			.memorybox { border-bottom: 1px solid grey; height: 100%; }
+			.inputbox { padding-left:30px; border-right: 1px solid grey; height: 100%; }
+			.outputbox { border-left: 1px solid grey; height: 100%; }
+			.harddiskbox { border-top: 1px solid grey; height: 100%; }
+
+			.centerdiv { height: 60%; width: 100%;}
+			.titlebox { text-align: center; }
+			.select {border:1px solid;}
+			.shortwidth {width:50px;}
+			.memoryboxes {width:100px; float:left; margin-bottom: 2px;}
+			.memoryboxes label { margin-left:15px; margin-top: 8px; float:left;}
+			.memoryboxes input {float:right;}
+			.inline-box {diplay:inline; float:left;}
+
+			.movable {position:absolute;}
+			#input {height: 55%; width:100%;}
+			#output {height: 90%; width:100%;}
+
+			#calculatorbox1{height:300px; width:225px; left: 100px; top:50px; position: absolute; background: #BAD0EF; opacity:0.6; border: 1px dashed;}
+			#calculatorbox2{height:300px; width:225px; left: 400px; top:50px; position: absolute; background: #BAD0EF; opacity:0.6; border: 1px dashed;}
+		</style>
+	</head>
+	<body>
+
+		<div class="row rowdiv">
+		  <div class="col-md-3 titlebox greyedboxes">
+		  	<h2>Little Man Computer</h2>
+		  	<p>
+		  		A simulation of how CPU aka little man interacts with other components of the computer.
+		  	</p>
+
+		  </div>
+		  <div class="col-md-6 memorybox">
+		  	<h4><small>Memory aka RAM</small></h4>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#1</label>
+			  	<input type="text" class="form-control shortwidth inline-box">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#2</label>
+			  	<input type="text" class="form-control shortwidth inline-box">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#3</label>
+			  	<input type="text" class="form-control shortwidth inline-box">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#4</label>
+			  	<input type="text" class="form-control shortwidth inline-box">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#5</label>
+			  	<input type="text" class="form-control shortwidth inline-box">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#6</label>
+			  	<input type="text" class="form-control shortwidth inline-box">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#7</label>
+			  	<input type="text" class="form-control shortwidth inline-box">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#8</label>
+			  	<input type="text" class="form-control shortwidth inline-box">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#9</label>
+			  	<input type="text" class="form-control shortwidth inline-box">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#10</label>
+			  	<input type="text" class="form-control shortwidth inline-box">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#11</label>
+			  	<input type="text" class="form-control shortwidth inline-box">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#12</label>
+			  	<input type="text" class="form-control shortwidth inline-box">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#13</label>
+			  	<input type="text" class="form-control shortwidth inline-box">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#14</label>
+			  	<input type="text" class="form-control shortwidth inline-box">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#15</label>
+			  	<input type="text" class="form-control shortwidth inline-box">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#16</label>
+			  	<input type="text" class="form-control shortwidth inline-box">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#17</label>
+			  	<input type="text" class="form-control shortwidth inline-box">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#18</label>
+			  	<input type="text" class="form-control shortwidth inline-box">
+		  	</div>
+		  </div>
+		  <div class="col-md-3 greyedboxes"></div>
+		</div>
+
+		<div class="row centerdiv">
+		  <div class="col-md-3 inputbox">
+		  	<h4><small>Add instructions</small></h4>
+		  	<div class="form-inline">
+		  		<div class="form-group">
+				  	<select class="form-control ">
+					  <option>Instruction</option>
+					  <option>Load</option>
+					  <option>Store</option>
+					  <option>Add</option>
+					  <option>Subtract</option>
+					</select>
+			  	</div>
+			  	<div class="form-group">
+				  	<select class="form-control">
+					  <option>Values</option>
+					  <option>1</option>
+					  <option>2</option>
+					  <option>3</option>
+					</select>
+				</div>
+			  	<div class="form-group">
+				  	<select class="form-control">
+					  <option>Memory Location</option>
+					  <option>#1</option>
+					  <option>#2</option>
+					  <option>#3</option>
+					</select>
+				</div>
+			  	<div class="form-group">
+				  	<select class="form-control">
+					  <option>Use Register</option>
+					  <option>#1</option>
+					  <option>#2</option>
+					  <option>#3</option>
+					</select>
+				</div>
+			  	<div class="form-group">
+			  		<button class="btn btn-warning">Add</button>
+			  	</div>
+				<hr>
+		  		<center><h4><u>Intructions AKA Codes</u></h4></center>
+		  		<textarea class="form-control" id="input"></textarea>
+		  	</div>
+		  </div>
+		  <div class="col-md-6"> <!-- Windows -->
+		  	<div style="width:100%; height:1%">
+		  		<svg height="1" width="500" class="movable">
+				  <line x1="250" y1="1" x2="400" y2="1" style="stroke:rgb(0,0,0);stroke-width:2" />
+				</svg>
+		  	</div>
+		  	<div style="width:100%; height:98%">
+		  		<div style="width:1%; height:100%; float:left; display:inline;">
+					<svg height="500" width="1" style="left:0;" class="movable">
+					  <line x1="1" y1="200" x2="1" y2="300" style="stroke:rgb(0,0,0);stroke-width:2" />
+					</svg>
+		  		</div>
+		  		<div style="width:98%; height:100%; float:left; display:inline;">
+		  			<!-- Little man computer box-->
+		  			<div id="calculatorbox1">
+		  				<small style="float:left; width:100%;">Calculator One</small>
+		  				<hr>
+		  				<center><small>Registers</small></center>
+					  	<div class="memoryboxes inline-box">
+						  	<label class="inline-box">#1</label>
+						  	<input type="text" class="form-control shortwidth inline-box">
+					  	</div>
+					  	<div class="memoryboxes inline-box">
+						  	<label class="inline-box">#2</label>
+						  	<input type="text" class="form-control shortwidth inline-box">
+					  	</div>
+					  	<div class="memoryboxes inline-box">
+						  	<label class="inline-box">#3</label>
+						  	<input type="text" class="form-control shortwidth inline-box">
+					  	</div>
+					  	<div class="memoryboxes inline-box">
+						  	<label class="inline-box">#4</label>
+						  	<input type="text" class="form-control shortwidth inline-box">
+					  	</div>
+		  			</div>
+		  			<div id="calculatorbox2">
+		  				<small style="float:left; width:100%;">Calculator Two</small>
+		  				<hr>
+		  				<center><small>Registers</small></center>
+					  	<div class="memoryboxes inline-box">
+						  	<label class="inline-box">#1</label>
+						  	<input type="text" class="form-control shortwidth inline-box">
+					  	</div>
+					  	<div class="memoryboxes inline-box">
+						  	<label class="inline-box">#2</label>
+						  	<input type="text" class="form-control shortwidth inline-box">
+					  	</div>
+					  	<div class="memoryboxes inline-box">
+						  	<label class="inline-box">#3</label>
+						  	<input type="text" class="form-control shortwidth inline-box">
+					  	</div>
+					  	<div class="memoryboxes inline-box">
+						  	<label class="inline-box">#4</label>
+						  	<input type="text" class="form-control shortwidth inline-box">
+					  	</div>
+		  			</div>
+			  		<svg height="50" width="50" style="left:0;" class="movable">
+					  <circle cx="27" cy="27" r="20" stroke="black" stroke-width="2" fill="red" />
+					</svg>	
+
+
+			  		<svg height="50" width="50" style="bottom:0;" class="movable">
+					  <circle cx="27" cy="27" r="20" stroke="black" stroke-width="2" fill="blue" />
+					</svg>	
+		  		</div>
+		  		<div style="width:1%; height:100%; float:left; display:inline;">
+					<svg height="500" width="1" style="right:0;" class="movable">
+					  <line x1="1" y1="200" x2="1" y2="300" style="stroke:rgb(0,0,0);stroke-width:2" />
+					</svg>
+		  		</div>
+			</div>
+			<div style="width:100%; height:1%">
+				<svg height="1" width="500" style="bottom:0;" class="movable">
+				  <line x1="250" y1="1" x2="400" y2="1" style="stroke:rgb(0,0,0);stroke-width:2" />
+				</svg>
+		  	</div>
+		  </div>
+		  <div class="col-md-3 outputbox">
+		  	
+		  	<h4><small>Output</small></h4>
+		  	<textarea class="form-control" disabled id="output"></textarea>
+		  </div>
+		</div>
+
+		<div class="row rowdiv">
+		  <div class="col-md-3 greyedboxes">
+		  	<p style="margin-top:100px;"> <small>
+		  		Terms used in this LMC might not be the exact terms used by a computer. It is intended to be simple and easy to understand.
+		  		</small>
+		  	</p>
+		  </div>
+		  <div class="col-md-6 harddiskbox">
+		  	<h4><small>Hard Disk</small></h4>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#1</label>
+			  	<input type="text" class="form-control shortwidth inline-box">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#2</label>
+			  	<input type="text" class="form-control shortwidth inline-box">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#3</label>
+			  	<input type="text" class="form-control shortwidth inline-box">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#4</label>
+			  	<input type="text" class="form-control shortwidth inline-box">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#5</label>
+			  	<input type="text" class="form-control shortwidth inline-box">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#6</label>
+			  	<input type="text" class="form-control shortwidth inline-box">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#7</label>
+			  	<input type="text" class="form-control shortwidth inline-box">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#8</label>
+			  	<input type="text" class="form-control shortwidth inline-box">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#9</label>
+			  	<input type="text" class="form-control shortwidth inline-box">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#10</label>
+			  	<input type="text" class="form-control shortwidth inline-box">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#11</label>
+			  	<input type="text" class="form-control shortwidth inline-box">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#12</label>
+			  	<input type="text" class="form-control shortwidth inline-box">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#13</label>
+			  	<input type="text" class="form-control shortwidth inline-box">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#14</label>
+			  	<input type="text" class="form-control shortwidth inline-box">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#15</label>
+			  	<input type="text" class="form-control shortwidth inline-box">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#16</label>
+			  	<input type="text" class="form-control shortwidth inline-box">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#17</label>
+			  	<input type="text" class="form-control shortwidth inline-box">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#18</label>
+			  	<input type="text" class="form-control shortwidth inline-box">
+		  	</div>
+		  </div>
+		  <div class="col-md-3 greyedboxes"></div>
+		</div>
+	</body>
+</html>
