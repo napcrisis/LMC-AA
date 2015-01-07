@@ -9,164 +9,644 @@
 
 		<!-- Latest compiled and minified JavaScript -->
 		<script src="js/bootstrap.min.js"></script>
+		<title>Little Minion Computer</title>
 		<style>
 			html, body { height: 100%; width: 100%; margin: 0; }
 			.rowdiv { height: 20%; width: 100%; }
 
-			.greyedboxes {background: #999; height: 100%; }
+			.greyedboxes { background: #999; height: 100%; }
 			.memorybox { border-bottom: 1px solid grey; height: 100%; }
 			.inputbox { padding-left:30px; border-right: 1px solid grey; height: 100%; }
 			.outputbox { border-left: 1px solid grey; height: 100%; }
 			.harddiskbox { border-top: 1px solid grey; height: 100%; }
 
-			.centerdiv { height: 60%; width: 100%;}
+			.centerdiv { height: 60%; width: 100%; }
 			.titlebox { text-align: center; }
-			.select {border:1px solid;}
-			.shortwidth {width:50px;}
-			.memoryboxes {width:100px; float:left; margin-bottom: 2px;}
-			.memoryboxes label { margin-left:15px; margin-top: 8px; float:left;}
-			.memoryboxes input {float:right;}
-			.inline-box {diplay:inline; float:left;}
+			.select { border:1px solid; }
+			.shortwidth { width:50px; }
+			.memoryboxes { width:100px; float:left; margin-bottom: 2px; }
+			.memoryboxes label { margin-left:15px; margin-top: 8px; float:left; }
+			.memoryboxes input { float:right; }
+			.inline-box { diplay:inline; float:left; }
 
-			.movable {position:absolute;}
-			#input {height: 55%; width:100%;}
-			#output {height: 90%; width:100%;}
+			.movable { position:absolute; }
+			#input { height: 55%; width:100%; }
+			#output { height: 90%; width:100%; }
 
 			#calculatorbox1{height:300px; width:225px; left: 100px; top:50px; position: absolute; background: #BAD0EF; opacity:0.6; border: 1px dashed;}
 			#calculatorbox2{height:300px; width:225px; left: 400px; top:50px; position: absolute; background: #BAD0EF; opacity:0.6; border: 1px dashed;}
+			.instructionbox {margin: 5px 0 0 10px;}
+			.focusedInput {
+			    border-color: #ccc;
+			    border-color: rgba(82, 168, 236, .8);
+			    outline: 0;
+			    outline: thin dotted \9;
+			    -webkit-box-shadow: 0 0 8px rgba(82, 168, 236, .6);
+			    box-shadow: 0 0 8px rgba(82, 168, 236, .6)
+			}
 		</style>
+		<script>
+			$(function(){
+				$("#instruction").change(function(){
+					$("#write").hide();
+					$("#cod").hide();
+					$("#com").hide();
+					$("#read").hide();
+					$("#add").hide();
+					$("#subtract").hide();
+					$("#work").hide();
+					$("#outputbox").hide();
+					switch($("#instruction").val()) {
+					    case "Write":
+					    	$("#write").show();
+					        break;
+					    case "Copy to disk":
+					    	$("#cod").show();
+					        break;
+					    case "Copy to memory":
+					    	$("#com").show();
+					        break;
+					    case "Read":
+					    	$("#read").show();
+					        break;
+					    case "Add":
+					    	$("#add").show();
+					        break;
+					    case "Subtract":
+					    	$("#subtract").show();
+					        break;
+					    case "Output":
+					    	$("#outputbox").show();
+					        break;
+					    case "Work":
+					    	$("#work").show();
+					        break;
+					}
+				});
+				$("#actionwrite").click(function(){
+					var registerVal = $("#write").find('.register').first().val();
+					var valueVal = $("#write").find('.value').first().val();
+					var memoryVal = $("#write").find('.memory').first().val();
+					if((valueVal=="Values" && registerVal=="Register") || (valueVal!="Values" && registerVal!="Register")){
+						alert("Please choose either Register or value");
+						return;
+					}
+					if(memoryVal=="Memory"){
+						alert("Please memory location to write to.");
+						return;	
+					}
+					var either = valueVal=="Values"?"reg"+registerVal:valueVal;
+					writeToInput("WRITE "+either + " mem" + memoryVal);
+					
+				});
+				$("#actioncod").click(function(){
+					var memory = $("#cod").find('.memory').first().val();
+					var hd = $("#cod").find('.harddisk').first().val();
+					if(hd=="Hard Disk" || memory=="Memory"){
+						alert("Please input required fields.");
+						return;
+					}
+					writeToInput("COPY_TO_DISK mem"+memory+" hd"+hd);
+				});
+				$("#actioncom").click(function(){
+					var memory = $("#com").find('.memory').first().val();
+					var hd = $("#com").find('.harddisk').first().val();
+					if(hd=="Hard Disk" || memory=="Memory"){
+						alert("Please input required fields.");
+						return;
+					}
+					writeToInput("COPY_TO_MEMORY hd"+hd +" mem"+memory);
+				});
+				$("#actionread").click(function(){
+					var memory = $("#read").find('.memory').first().val();
+					var register = $("#read").find('.register').first().val();
+					if(register=="Register" || memory=="Memory"){
+						alert("Please input required fields.");
+						return;
+					}
+					writeToInput("READ mem"+memory+" reg"+register);
+				});
+				$("#actionadd").click(function(){
+					var register1 = $("#add").find('.register1').first().val();
+					var register2 = $("#add").find('.register2').first().val();
+					if(register1=="Register" || register2=="Register"){
+						alert("Please input required fields.");
+						return;
+					}
+					writeToInput("ADD reg"+register1+" reg"+register2);
+				});
+				$("#actionsubtract").click(function(){
+					var register1 = $("#subtract").find('.register1').first().val();
+					var register2 = $("#subtract").find('.register2').first().val();
+					if(register1=="Register" || register2=="Register"){
+						alert("Please input required fields.");
+						return;
+					}
+					writeToInput("SUB reg"+register1+" reg"+register2);
+				});
+				$("#actionoutput").click(function(){
+					var register = $("#outputbox").find('.register').first().val();
+					if(register=="Register"){
+						alert("Please input required fields.");
+						return;
+					}
+					writeToInput("OUTPUT reg"+register);
+				});
+				$("#actionwork").click(function(){
+					var value = $("#work").find('.value').first().val();
+					if(value=="Values"){
+						alert("Please input required fields.");
+						return;
+					}
+					writeToInput("WORK "+value);
+				});
+
+				$("#cod").hide();
+				$("#read").hide();
+				$("#com").hide();
+				$("#add").hide();
+				$("#subtract").hide();
+				$("#outputbox").hide();
+				$("#work").hide();
+
+				function writeToOutput(str){
+					var input = "";
+					if($("#output").val()!=""){
+						input = $("#output").val()+"\n";
+					}
+					input += str;
+					$("#output").val(input);
+				}
+				function writeToInput(str){
+					var input = "";
+					if($("#input").val()!=""){
+						input = $("#input").val()+"\n";
+					}
+					input += str;
+					$("#input").val(input);
+				}
+				$("#run").click(function(){
+					if($("#input").val()!=""){
+						$("#output").val("");
+						writeToOutput("Running instructions");
+						var commands = $("#input").val();
+						commands = commands.split("\n");
+						for(i = 0; i < commands.length; i++){
+							var command = commands[i];
+							console.log(command);
+							command = command.split(" ");
+							// INSTEAD OF PAUSING, CAN CONSIDER ANIMATION AS WELL. http://stackoverflow.com/questions/8111232/javascript-function-to-execute-at-a-later-point-in-time-once-variables-updated
+							$("#coreone_ic").val(i);
+							clearHighlights();
+							if(command.length>=3){
+								highlight(command[2]);
+							} 
+							highlight(command[1]);
+							switch(command[0]){
+								case "WRITE":
+								case "COPY_TO_DISK":
+								case "READ":
+								case "COPY_TO_MEMORY":
+									var writeTo = getHTML(command[2]);
+									var newVal = getValue(command[1]);
+									writeTo.val(newVal);
+								break;
+								case "ADD":
+									var writeTo = getHTML(command[2]);
+									var newVal = parseInt(getValue(command[1]));
+									var oldVal = parseInt(getValue(command[2]));
+									writeTo.val(newVal+oldVal);
+								break;
+								case "SUB":
+									var writeTo = getHTML(command[2]);
+									var newVal = parseInt(getValue(command[1]));
+									var oldVal = parseInt(getValue(command[2]));
+									writeTo.val(newValoldVal);
+								break;
+								case "OUTPUT":
+									var newVal = getValue(command[1]);
+									writeToOutput(newVal);
+									$("#output").addClass("focusedInput");
+								break;
+								default:
+									alert("Invalid Comamnd");
+									return;
+							}
+						}
+					}
+				});
+				function getValue(locationOrValue){
+					var parts = locationOrValue.split("#");
+					if(parts.length<2){
+						return locationOrValue;
+					}
+					switch(parts[0]){
+						case "mem":
+							return $('.mem'+parts[1]).first().val();
+						break;
+						case "hd":
+							return $('.hd'+parts[1]).first().val();
+						break;
+						case "reg":
+							return $('.regone'+parts[1]).first().val();
+						break;
+					}
+					return null;
+				}
+				function getHTML(location){
+					var parts = location.split("#");
+					switch(parts[0]){
+						case "mem":
+							return $('.mem'+parts[1]).first();
+						break;
+						case "hd":
+							return $('.hd'+parts[1]).first();
+						break;
+						case "reg":
+							return $('.regone'+parts[1]).first();
+						break;
+						default:
+							return null;
+					}
+				}
+				function clearHighlights(){
+					$(".focusedInput").each(function(){
+						$(this).removeClass("focusedInput");
+					});
+				}
+				function highlight(locationOrValue){
+					var parts = locationOrValue.split("#");
+					if(parts.length<2){
+						return;
+					}
+					switch(parts[0]){
+						case "mem":
+							$('.mem'+parts[1]).first().addClass("focusedInput");
+						break;
+						case "hd":
+							$('.hd'+parts[1]).first().addClass("focusedInput");
+						break;
+						case "reg":
+							$('.regone'+parts[1]).first().addClass("focusedInput");
+						break;
+					}
+				}
+			});
+		</script>
 	</head>
 	<body>
 
 		<div class="row rowdiv">
-		  <div class="col-md-3 titlebox greyedboxes">
-		  	<h2>Little Man Computer</h2>
+		  <div class="col-md-4 titlebox greyedboxes">
+		  	<h2>Little Minion Computer</h2>
 		  	<p>
-		  		A simulation of how CPU aka little man interacts with other components of the computer.
+		  		A simulation of how CPU aka little minion interacts with other components of the computer.
 		  	</p>
-
 		  </div>
 		  <div class="col-md-6 memorybox">
 		  	<h4><small>Memory aka RAM</small></h4>
 		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#0</label>
+			  	<input type="text" class="form-control shortwidth inline-box mem0">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
 			  	<label class="inline-box">#1</label>
-			  	<input type="text" class="form-control shortwidth inline-box">
+			  	<input type="text" class="form-control shortwidth inline-box mem1">
 		  	</div>
 		  	<div class="memoryboxes inline-box">
 			  	<label class="inline-box">#2</label>
-			  	<input type="text" class="form-control shortwidth inline-box">
+			  	<input type="text" class="form-control shortwidth inline-box mem2">
 		  	</div>
 		  	<div class="memoryboxes inline-box">
 			  	<label class="inline-box">#3</label>
-			  	<input type="text" class="form-control shortwidth inline-box">
+			  	<input type="text" class="form-control shortwidth inline-box mem3">
 		  	</div>
 		  	<div class="memoryboxes inline-box">
 			  	<label class="inline-box">#4</label>
-			  	<input type="text" class="form-control shortwidth inline-box">
+			  	<input type="text" class="form-control shortwidth inline-box mem4">
 		  	</div>
 		  	<div class="memoryboxes inline-box">
 			  	<label class="inline-box">#5</label>
-			  	<input type="text" class="form-control shortwidth inline-box">
+			  	<input type="text" class="form-control shortwidth inline-box mem5">
 		  	</div>
 		  	<div class="memoryboxes inline-box">
 			  	<label class="inline-box">#6</label>
-			  	<input type="text" class="form-control shortwidth inline-box">
+			  	<input type="text" class="form-control shortwidth inline-box mem6">
 		  	</div>
 		  	<div class="memoryboxes inline-box">
 			  	<label class="inline-box">#7</label>
-			  	<input type="text" class="form-control shortwidth inline-box">
+			  	<input type="text" class="form-control shortwidth inline-box mem7">
 		  	</div>
 		  	<div class="memoryboxes inline-box">
 			  	<label class="inline-box">#8</label>
-			  	<input type="text" class="form-control shortwidth inline-box">
+			  	<input type="text" class="form-control shortwidth inline-box mem8">
 		  	</div>
 		  	<div class="memoryboxes inline-box">
 			  	<label class="inline-box">#9</label>
-			  	<input type="text" class="form-control shortwidth inline-box">
+			  	<input type="text" class="form-control shortwidth inline-box mem9">
 		  	</div>
 		  	<div class="memoryboxes inline-box">
 			  	<label class="inline-box">#10</label>
-			  	<input type="text" class="form-control shortwidth inline-box">
+			  	<input type="text" class="form-control shortwidth inline-box mem10">
 		  	</div>
 		  	<div class="memoryboxes inline-box">
 			  	<label class="inline-box">#11</label>
-			  	<input type="text" class="form-control shortwidth inline-box">
+			  	<input type="text" class="form-control shortwidth inline-box mem11">
 		  	</div>
 		  	<div class="memoryboxes inline-box">
 			  	<label class="inline-box">#12</label>
-			  	<input type="text" class="form-control shortwidth inline-box">
+			  	<input type="text" class="form-control shortwidth inline-box mem12">
 		  	</div>
 		  	<div class="memoryboxes inline-box">
 			  	<label class="inline-box">#13</label>
-			  	<input type="text" class="form-control shortwidth inline-box">
+			  	<input type="text" class="form-control shortwidth inline-box mem13">
 		  	</div>
 		  	<div class="memoryboxes inline-box">
 			  	<label class="inline-box">#14</label>
-			  	<input type="text" class="form-control shortwidth inline-box">
+			  	<input type="text" class="form-control shortwidth inline-box mem14">
 		  	</div>
 		  	<div class="memoryboxes inline-box">
 			  	<label class="inline-box">#15</label>
-			  	<input type="text" class="form-control shortwidth inline-box">
+			  	<input type="text" class="form-control shortwidth inline-box mem15">
 		  	</div>
 		  	<div class="memoryboxes inline-box">
 			  	<label class="inline-box">#16</label>
-			  	<input type="text" class="form-control shortwidth inline-box">
+			  	<input type="text" class="form-control shortwidth inline-box mem16">
 		  	</div>
 		  	<div class="memoryboxes inline-box">
 			  	<label class="inline-box">#17</label>
-			  	<input type="text" class="form-control shortwidth inline-box">
-		  	</div>
-		  	<div class="memoryboxes inline-box">
-			  	<label class="inline-box">#18</label>
-			  	<input type="text" class="form-control shortwidth inline-box">
+			  	<input type="text" class="form-control shortwidth inline-box mem17">
 		  	</div>
 		  </div>
-		  <div class="col-md-3 greyedboxes"></div>
+		  <div class="col-md-2 greyedboxes"></div>
 		</div>
 
 		<div class="row centerdiv">
-		  <div class="col-md-3 inputbox">
-		  	<h4><small>Add instructions</small></h4>
+		  <div class="col-md-4 inputbox">
+		  	
 		  	<div class="form-inline">
-		  		<div class="form-group">
-				  	<select class="form-control ">
-					  <option>Instruction</option>
-					  <option>Load</option>
-					  <option>Store</option>
-					  <option>Add</option>
-					  <option>Subtract</option>
-					</select>
+		  		<div style="margin: 10px 0 0 10px;">
+			  		<label>Add instructions</label>
+			  		<div class="form-group">
+					  	<select class="form-control" id="instruction">
+						  <option>Write</option>
+						  <option>Copy to disk</option>
+						  <option>Copy to memory</option>
+						  <option>Read</option>
+						  <option>Add</option>
+						  <option>Subtract</option>
+						  <option>Output</option>
+						  <option>Work</option>
+						</select>
+				  	</div>
 			  	</div>
-			  	<div class="form-group">
-				  	<select class="form-control">
-					  <option>Values</option>
-					  <option>1</option>
-					  <option>2</option>
-					  <option>3</option>
-					</select>
-				</div>
-			  	<div class="form-group">
-				  	<select class="form-control">
-					  <option>Memory Location</option>
-					  <option>#1</option>
-					  <option>#2</option>
-					  <option>#3</option>
-					</select>
-				</div>
-			  	<div class="form-group">
-				  	<select class="form-control">
-					  <option>Use Register</option>
-					  <option>#1</option>
-					  <option>#2</option>
-					  <option>#3</option>
-					</select>
-				</div>
-			  	<div class="form-group">
-			  		<button class="btn btn-warning">Add</button>
+			  	<div id="instructionBox" class="row">
+			  		<div id="write" class="instructionbox">
+			  			<label>Write </label>
+			  			<select class="form-control value">
+						  <option>Values</option>
+						  <option>1</option>
+						  <option>2</option>
+						  <option>3</option>
+						  <option>4</option>
+						  <option>5</option>
+						  <option>6</option>
+						  <option>7</option>
+						  <option>8</option>
+						  <option>9</option>
+						  <option>10</option>
+						</select>
+			  			<label>or </label>
+					  	<select class="form-control register">
+						  <option>Register</option>
+						  <option>#0</option>
+						  <option>#1</option>
+						  <option>#2</option>
+						  <option>#3</option>
+						</select>
+						<label>to </label>
+
+					  	<select class="form-control memory">
+						  <option>Memory</option>
+						  <option>#0</option>
+						  <option>#1</option>
+						  <option>#2</option>
+						  <option>#3</option>
+						  <option>#4</option>
+						  <option>#5</option>
+						  <option>#6</option>
+						  <option>#7</option>
+						  <option>#8</option>
+						  <option>#9</option>
+						  <option>#10</option>
+						  <option>#11</option>
+						  <option>#12</option>
+						  <option>#13</option>
+						  <option>#14</option>
+						  <option>#15</option>
+						  <option>#16</option>
+						  <option>#17</option>
+						</select>
+						<a class="btn btn-success" id="actionwrite">Add</a>
+			  		</div>
+			  		<div id="cod" class="instructionbox">
+			  			<label>Copy </label>
+					  	<select class="form-control memory">
+						  <option>Memory</option>
+						  <option>#0</option>
+						  <option>#1</option>
+						  <option>#2</option>
+						  <option>#3</option>
+						  <option>#4</option>
+						  <option>#5</option>
+						  <option>#6</option>
+						  <option>#7</option>
+						  <option>#8</option>
+						  <option>#9</option>
+						  <option>#10</option>
+						  <option>#11</option>
+						  <option>#12</option>
+						  <option>#13</option>
+						  <option>#14</option>
+						  <option>#15</option>
+						  <option>#16</option>
+						  <option>#17</option>
+						</select>
+			  			<label>to </label>
+					  	<select class="form-control harddisk">
+						  <option>Hard Disk</option>
+						  <option>#0</option>
+						  <option>#1</option>
+						  <option>#2</option>
+						  <option>#3</option>
+						  <option>#4</option>
+						  <option>#5</option>
+						  <option>#6</option>
+						  <option>#7</option>
+						  <option>#8</option>
+						  <option>#9</option>
+						  <option>#10</option>
+						  <option>#11</option>
+						  <option>#12</option>
+						  <option>#13</option>
+						  <option>#14</option>
+						  <option>#15</option>
+						  <option>#16</option>
+						  <option>#17</option>
+						</select>
+						<a class="btn btn-success" id="actioncod">Add</a>
+			  		</div>
+			  		<div id="com" class="instructionbox">
+			  			<label>Copy </label>
+					  	<select class="form-control harddisk">
+						  <option>Hard Disk</option>
+						  <option>#0</option>
+						  <option>#1</option>
+						  <option>#2</option>
+						  <option>#3</option>
+						  <option>#4</option>
+						  <option>#5</option>
+						  <option>#6</option>
+						  <option>#7</option>
+						  <option>#8</option>
+						  <option>#9</option>
+						  <option>#10</option>
+						  <option>#11</option>
+						  <option>#12</option>
+						  <option>#13</option>
+						  <option>#14</option>
+						  <option>#15</option>
+						  <option>#16</option>
+						  <option>#17</option>
+						</select>
+			  			<label>to </label>
+					  	<select class="form-control memory">
+						  <option>Memory</option>
+						  <option>#0</option>
+						  <option>#1</option>
+						  <option>#2</option>
+						  <option>#3</option>
+						  <option>#4</option>
+						  <option>#5</option>
+						  <option>#6</option>
+						  <option>#7</option>
+						  <option>#8</option>
+						  <option>#9</option>
+						  <option>#10</option>
+						  <option>#11</option>
+						  <option>#12</option>
+						  <option>#13</option>
+						  <option>#14</option>
+						  <option>#15</option>
+						  <option>#16</option>
+						  <option>#17</option>
+						</select>
+						<a class="btn btn-success" id="actioncom">Add</a>
+			  		</div>
+			  		<div id="read" class="instructionbox">
+			  			<label>Read </label>
+				  		<select class="form-control memory">
+						  <option>Memory</option>
+						  <option>#0</option>
+						  <option>#1</option>
+						  <option>#2</option>
+						  <option>#3</option>
+						  <option>#4</option>
+						  <option>#5</option>
+						  <option>#6</option>
+						  <option>#7</option>
+						  <option>#8</option>
+						  <option>#9</option>
+						  <option>#10</option>
+						  <option>#11</option>
+						  <option>#12</option>
+						  <option>#13</option>
+						  <option>#14</option>
+						  <option>#15</option>
+						  <option>#16</option>
+						  <option>#17</option>
+						</select>
+			  			<label>onto </label>
+			  			<select class="form-control register">
+						  <option>Register</option>
+						  <option>#0</option>
+						  <option>#1</option>
+						  <option>#2</option>
+						  <option>#3</option>
+						</select>
+						<a class="btn btn-success" id="actionread">Add</a>
+			  		</div>
+			  		<div id="add" class="instructionbox">
+			  			<label>Add </label>
+			  			<select class="form-control register1">
+						  <option>Register</option>
+						  <option>#0</option>
+						  <option>#1</option>
+						  <option>#2</option>
+						  <option>#3</option>
+						</select>
+			  			<label>into </label>
+			  			<select class="form-control register2">
+						  <option>Register</option>
+						  <option>#0</option>
+						  <option>#1</option>
+						  <option>#2</option>
+						  <option>#3</option>
+						</select>
+						<a class="btn btn-success" id="actionadd">Add</a>
+			  		</div>
+			  		<div id="subtract" class="instructionbox">
+			  			<label>Subtract </label>
+			  			<select class="form-control register1">
+						  <option>Register</option>
+						  <option>#0</option>
+						  <option>#1</option>
+						  <option>#2</option>
+						  <option>#3</option>
+						</select>
+			  			<label>into </label>
+			  			<select class="form-control register2">
+						  <option>Register</option>
+						  <option>#0</option>
+						  <option>#1</option>
+						  <option>#2</option>
+						  <option>#3</option>
+						</select>
+						<a class="btn btn-success" id="actionsubtract">Add</a>
+			  		</div>
+			  		<div id="outputbox" class="instructionbox">
+			  			<label>Output </label>
+			  			<select class="form-control register">
+						  <option>Register</option>
+						  <option>#0</option>
+						  <option>#1</option>
+						  <option>#2</option>
+						  <option>#3</option>
+						</select>
+						<a class="btn btn-success" id="actionoutput">Add</a>
+			  		</div>
+			  		<div id="work" class="instructionbox">
+			  			<label>Work </label>
+			  			<select class="form-control value">
+						  <option>Values</option>
+						  <option>1</option>
+						  <option>2</option>
+						  <option>3</option>
+						  <option>4</option>
+						  <option>5</option>
+						  <option>6</option>
+						  <option>7</option>
+						  <option>8</option>
+						  <option>9</option>
+						  <option>10</option>
+						</select>
+						<a class="btn btn-success" id="actionwork">Add</a>
+			  		</div>
 			  	</div>
 				<hr>
-		  		<center><h4><u>Intructions AKA Codes</u></h4></center>
+		  		<center><h4><u>Instructions</u></h4></center>
 		  		<textarea class="form-control" id="input"></textarea>
+		  		<a class="btn btn-danger" style="margin-top:10px;" id="run">run</a>
 		  	</div>
 		  </div>
 		  <div class="col-md-6"> <!-- Windows -->
@@ -184,54 +664,64 @@
 		  		<div style="width:98%; height:100%; float:left; display:inline;">
 		  			<!-- Little man computer box-->
 		  			<div id="calculatorbox1">
-		  				<small style="float:left; width:100%;">Calculator One</small>
+		  				<small style="float:left; width:100%;">Core One</small>
+		  				<hr>
+					  	<div style="display:block; float:left; width:100%; margin:5px;">
+						  	<label class="inline-box" style="margin:5px 10px 0 5px;">Instruction Counter</label>
+						  	<input type="text" id="coreone_ic" class="form-control shortwidth inline-box">
+						</div>
 		  				<hr>
 		  				<center><small>Registers</small></center>
 					  	<div class="memoryboxes inline-box">
+						  	<label class="inline-box">#0</label>
+						  	<input type="text" class="form-control shortwidth inline-box regone0">
+					  	</div>
+					  	<div class="memoryboxes inline-box">
 						  	<label class="inline-box">#1</label>
-						  	<input type="text" class="form-control shortwidth inline-box">
+						  	<input type="text" class="form-control shortwidth inline-box regone1">
 					  	</div>
 					  	<div class="memoryboxes inline-box">
 						  	<label class="inline-box">#2</label>
-						  	<input type="text" class="form-control shortwidth inline-box">
+						  	<input type="text" class="form-control shortwidth inline-box regone2">
 					  	</div>
 					  	<div class="memoryboxes inline-box">
 						  	<label class="inline-box">#3</label>
-						  	<input type="text" class="form-control shortwidth inline-box">
-					  	</div>
-					  	<div class="memoryboxes inline-box">
-						  	<label class="inline-box">#4</label>
-						  	<input type="text" class="form-control shortwidth inline-box">
+						  	<input type="text" class="form-control shortwidth inline-box regone3">
 					  	</div>
 		  			</div>
 		  			<div id="calculatorbox2">
-		  				<small style="float:left; width:100%;">Calculator Two</small>
+		  				<small style="float:left; width:100%;">Core Two</small>
+		  				<hr>
+						  	<div style="display:block; float:left; width:100%; margin:5px;">
+							  	<label class="inline-box" style="margin:5px 10px 0 5px;">Instruction Counter</label>
+							  	<input type="text" id="coretwo_ic" class="form-control shortwidth inline-box">
+							</div>
 		  				<hr>
 		  				<center><small>Registers</small></center>
 					  	<div class="memoryboxes inline-box">
+						  	<label class="inline-box">#0</label>
+						  	<input type="text" class="form-control shortwidth inline-box regtwo0">
+					  	</div>
+					  	<div class="memoryboxes inline-box">
 						  	<label class="inline-box">#1</label>
-						  	<input type="text" class="form-control shortwidth inline-box">
+						  	<input type="text" class="form-control shortwidth inline-box regtwo1">
 					  	</div>
 					  	<div class="memoryboxes inline-box">
 						  	<label class="inline-box">#2</label>
-						  	<input type="text" class="form-control shortwidth inline-box">
+						  	<input type="text" class="form-control shortwidth inline-box regtwo2">
 					  	</div>
 					  	<div class="memoryboxes inline-box">
 						  	<label class="inline-box">#3</label>
-						  	<input type="text" class="form-control shortwidth inline-box">
-					  	</div>
-					  	<div class="memoryboxes inline-box">
-						  	<label class="inline-box">#4</label>
-						  	<input type="text" class="form-control shortwidth inline-box">
+						  	<input type="text" class="form-control shortwidth inline-box regtwo3">
 					  	</div>
 		  			</div>
 			  		<svg height="50" width="50" style="left:0;" class="movable">
-					  <circle cx="27" cy="27" r="20" stroke="black" stroke-width="2" fill="red" />
+					  <circle cx="27" cy="27" r="20" stroke="blue" stroke-width="2" fill="yellow" />
 					</svg>	
 
 
 			  		<svg height="50" width="50" style="bottom:0;" class="movable">
-					  <circle cx="27" cy="27" r="20" stroke="black" stroke-width="2" fill="blue" />
+					  <circle cx="27" cy="27" r="20" stroke="blue" stroke-width="2" fill="yellow" />
 					</svg>	
 		  		</div>
 		  		<div style="width:1%; height:100%; float:left; display:inline;">
@@ -246,7 +736,7 @@
 				</svg>
 		  	</div>
 		  </div>
-		  <div class="col-md-3 outputbox">
+		  <div class="col-md-2 outputbox">
 		  	
 		  	<h4><small>Output</small></h4>
 		  	<textarea class="form-control" disabled id="output"></textarea>
@@ -254,88 +744,93 @@
 		</div>
 
 		<div class="row rowdiv">
-		  <div class="col-md-3 greyedboxes">
+		  <div class="col-md-4 greyedboxes" style="padding:20px;">
+		  	<button class="btn btn-warning">Example input 1</button> <br><br>
+		  	<button class="btn btn-success">Example input 2</button> <br><br>
+		  	<button class="btn btn-danger">Example input 3</button> 
+
+		  </div>
+		  <div class="col-md-6 harddiskbox">
+		  	<h4><small>Hard Disk</small></h4>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#0</label>
+			  	<input type="text" class="form-control shortwidth inline-box hd0">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#1</label>
+			  	<input type="text" class="form-control shortwidth inline-box hd1">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#2</label>
+			  	<input type="text" class="form-control shortwidth inline-box hd2">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#3</label>
+			  	<input type="text" class="form-control shortwidth inline-box hd3">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#4</label>
+			  	<input type="text" class="form-control shortwidth inline-box hd4">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#5</label>
+			  	<input type="text" class="form-control shortwidth inline-box hd5">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#6</label>
+			  	<input type="text" class="form-control shortwidth inline-box hd6">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#7</label>
+			  	<input type="text" class="form-control shortwidth inline-box hd7">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#8</label>
+			  	<input type="text" class="form-control shortwidth inline-box hd8">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#9</label>
+			  	<input type="text" class="form-control shortwidth inline-box hd9">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#10</label>
+			  	<input type="text" class="form-control shortwidth inline-box hd10">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#11</label>
+			  	<input type="text" class="form-control shortwidth inline-box hd11">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#12</label>
+			  	<input type="text" class="form-control shortwidth inline-box hd12">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#13</label>
+			  	<input type="text" class="form-control shortwidth inline-box hd13">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#14</label>
+			  	<input type="text" class="form-control shortwidth inline-box hd14">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#15</label>
+			  	<input type="text" class="form-control shortwidth inline-box hd15">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#16</label>
+			  	<input type="text" class="form-control shortwidth inline-box hd16">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#17</label>
+			  	<input type="text" class="form-control shortwidth inline-box hd17">
+		  	</div>
+		  </div>
+		  <div class="col-md-2 greyedboxes">
 		  	<p style="margin-top:100px;"> <small>
 		  		Terms used in this LMC might not be the exact terms used by a computer. It is intended to be simple and easy to understand.
 		  		</small>
 		  	</p>
 		  </div>
-		  <div class="col-md-6 harddiskbox">
-		  	<h4><small>Hard Disk</small></h4>
-		  	<div class="memoryboxes inline-box">
-			  	<label class="inline-box">#1</label>
-			  	<input type="text" class="form-control shortwidth inline-box">
-		  	</div>
-		  	<div class="memoryboxes inline-box">
-			  	<label class="inline-box">#2</label>
-			  	<input type="text" class="form-control shortwidth inline-box">
-		  	</div>
-		  	<div class="memoryboxes inline-box">
-			  	<label class="inline-box">#3</label>
-			  	<input type="text" class="form-control shortwidth inline-box">
-		  	</div>
-		  	<div class="memoryboxes inline-box">
-			  	<label class="inline-box">#4</label>
-			  	<input type="text" class="form-control shortwidth inline-box">
-		  	</div>
-		  	<div class="memoryboxes inline-box">
-			  	<label class="inline-box">#5</label>
-			  	<input type="text" class="form-control shortwidth inline-box">
-		  	</div>
-		  	<div class="memoryboxes inline-box">
-			  	<label class="inline-box">#6</label>
-			  	<input type="text" class="form-control shortwidth inline-box">
-		  	</div>
-		  	<div class="memoryboxes inline-box">
-			  	<label class="inline-box">#7</label>
-			  	<input type="text" class="form-control shortwidth inline-box">
-		  	</div>
-		  	<div class="memoryboxes inline-box">
-			  	<label class="inline-box">#8</label>
-			  	<input type="text" class="form-control shortwidth inline-box">
-		  	</div>
-		  	<div class="memoryboxes inline-box">
-			  	<label class="inline-box">#9</label>
-			  	<input type="text" class="form-control shortwidth inline-box">
-		  	</div>
-		  	<div class="memoryboxes inline-box">
-			  	<label class="inline-box">#10</label>
-			  	<input type="text" class="form-control shortwidth inline-box">
-		  	</div>
-		  	<div class="memoryboxes inline-box">
-			  	<label class="inline-box">#11</label>
-			  	<input type="text" class="form-control shortwidth inline-box">
-		  	</div>
-		  	<div class="memoryboxes inline-box">
-			  	<label class="inline-box">#12</label>
-			  	<input type="text" class="form-control shortwidth inline-box">
-		  	</div>
-		  	<div class="memoryboxes inline-box">
-			  	<label class="inline-box">#13</label>
-			  	<input type="text" class="form-control shortwidth inline-box">
-		  	</div>
-		  	<div class="memoryboxes inline-box">
-			  	<label class="inline-box">#14</label>
-			  	<input type="text" class="form-control shortwidth inline-box">
-		  	</div>
-		  	<div class="memoryboxes inline-box">
-			  	<label class="inline-box">#15</label>
-			  	<input type="text" class="form-control shortwidth inline-box">
-		  	</div>
-		  	<div class="memoryboxes inline-box">
-			  	<label class="inline-box">#16</label>
-			  	<input type="text" class="form-control shortwidth inline-box">
-		  	</div>
-		  	<div class="memoryboxes inline-box">
-			  	<label class="inline-box">#17</label>
-			  	<input type="text" class="form-control shortwidth inline-box">
-		  	</div>
-		  	<div class="memoryboxes inline-box">
-			  	<label class="inline-box">#18</label>
-			  	<input type="text" class="form-control shortwidth inline-box">
-		  	</div>
-		  </div>
-		  <div class="col-md-3 greyedboxes"></div>
 		</div>
 	</body>
 </html>
