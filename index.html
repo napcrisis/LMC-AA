@@ -17,7 +17,7 @@
 
 			.greyedboxes { background: #999; height: 100%; }
 			.memorybox { border-bottom: 1px solid grey; height: 100%; }
-			.inputbox { padding-left:30px; border-right: 1px solid grey; height: 470px; overflow-y:scroll;}
+			.inputbox { padding-left:30px; border-right: 1px solid grey; height: 100%; overflow-y:scroll;}
 			.outputbox { border-left: 1px solid grey; height: 100%; }
 			.harddiskbox { border-top: 1px solid grey; height: 100%; }
 
@@ -32,15 +32,15 @@
 
 			.movable { position:absolute; }
 			.movableMinion { position:absolute; width: 70px; height: 70px;}
-			#input { height: 55%; width:100%; }
+			#input { height: 90%; width:100%; }
 			#output { height: 90%; width:100%; }
 
 			#calculatorbox1{height:250px; width:225px; left: 250px; top:100px; position: absolute; background: #BAD0EF; opacity:0.6; border: 1px dashed;}
 			#calculatorbox2{height:250px; width:225px; left: 400px; top:100px; position: absolute; background: #BAD0EF; opacity:0.6; border: 1px dashed;}
 			.instructionbox {margin: 5px 0 0 10px;}
 			.focusedInput {
-			    border-color: #ccc;
-			    border-color: rgba(82, 168, 236, .8);
+			    border-color: #F80000;
+			    border-color: rgba(255, 0, 0, .8);
 			    outline: 0;
 			    outline: thin dotted \9;
 			    -webkit-box-shadow: 0 0 8px rgba(82, 168, 236, .6);
@@ -219,11 +219,12 @@
 					$("#input").val(input);
 				}
 				$("#reset").click(function(){
-					reset(true);
+					reset(false);
 				});
 				function reset(clearinput){
 					if(clearinput)
 						$("#input").val("");
+					$("#timer").text("");
 					$("#output").val("");
 					$(".memoryInput").each(function(){
 						$(this).val("0");
@@ -241,6 +242,7 @@
 				shiftImageTo($("#minionone"),3);
 				$("#run").click(function(){
 					if($("#input").val()!=""){
+						startTimer();
 						transformIntoTable();
 						reset(false);
 						$("#output").val("");
@@ -255,12 +257,14 @@
 				});
 				$("#steppe").click(function(){
 					if(hackyCoreOne_IC=="-"){
+						startTimer();
 						transformIntoTable();
 						reset(false);
 						hackyCoreOne_IC = -1;
 						$("#coreone_ic").val(hackyCoreOne_IC);
 					}
 					$("#run").hide();
+					$("#steppe").hide();
 					hackyItsASteppe = true;
 					step();
 				});
@@ -281,7 +285,29 @@
 					}
 
 				}
-				var hackywriteto, hackyOldVal, hackyNewVal, hackyItsASteppe, hackyCoreOne_IC;
+				var hackywriteto, hackyOldVal, hackyNewVal, hackyItsASteppe, hackyCoreOne_IC,hackyTime;
+				function startTimer(){
+					hackyTime = 0;
+					$("#timer").show();
+					$("#timer").text(hackyTime);
+				}
+				function incrementTimer(typeOfUsage){ // #1 register operation, #2 memory, #3 harddisk, #4 output
+					switch(typeOfUsage){
+						case 1:
+							hackyTime = hackyTime + 1;
+						break;
+						case 2: 
+							hackyTime = hackyTime + 100;
+						break;
+						case 3:
+							hackyTime = hackyTime + 10000;
+						break;
+						case 4:
+							hackyTime = hackyTime + 10000;
+						break;
+					}
+					$("#timer").text(hackyTime);
+				}
 				function step(){
 					var commands = $("#input").val();
 					commands = commands.split("\n");
@@ -316,11 +342,16 @@
 							hackywriteto = getHTML(command[2]);
 							var newVal = getValue(command[1]);
 							var callback = function(){
+								incrementTimer(2);
 								shiftImageTo($("#minionone"),1);
 								hackywriteto.val(newVal);
-								if(!hackyItsASteppe)
-								step();
+								if(!hackyItsASteppe){
+									step();
+								} else {
+									$("#steppe").show();
+								}
 							};
+							incrementTimer(1);
 							if(command[1].indexOf("#") >= 0) { // is constants
 								shiftImageTo($("#minionone"),5, callback);
 							} else { // comes from register
@@ -331,92 +362,155 @@
 							hackywriteto = getHTML(command[2]);
 							var newVal = getValue(command[1]);
 							var callback = function(){
+								incrementTimer(3);
 								shiftImageTo($("#minionone"),2);
 								hackywriteto.val(newVal);
-								if(!hackyItsASteppe)
-								step();
+								if(!hackyItsASteppe){
+									step();
+								} else {
+									$("#steppe").show();
+								}
 							};
+							incrementTimer(2);
 							shiftImageTo($("#minionone"),1, callback);
 						break;
 						case "READ":
 							hackywriteto = getHTML(command[2]);
 							var newVal = getValue(command[1]);
 							var callback = function(){
+								incrementTimer(1);
 								shiftImageTo($("#minionone"),5);
 								hackywriteto.val(newVal);
-								if(!hackyItsASteppe)
-								step();
+								if(!hackyItsASteppe){
+									step();
+								} else {
+									$("#steppe").show();
+								}
 							};
+							incrementTimer(2);
 							shiftImageTo($("#minionone"),1,callback);
 						break;
 						case "COPY_TO_MEMORY":
 							hackywriteto = getHTML(command[2]);
 							var newVal = getValue(command[1]);
 							var callback = function(){
+								incrementTimer(2);
 								shiftImageTo($("#minionone"),1, null);
 								hackywriteto.val(newVal);
-								if(!hackyItsASteppe)
-								step();
+								if(!hackyItsASteppe){
+									step();
+								} else {
+									$("#steppe").show();
+								}
 							};
+							incrementTimer(3);
 							shiftImageTo($("#minionone"),2,callback);
 						break;
 						case "ADD":
 							hackywriteto = getHTML(command[2]);
+							incrementTimer(1);
 							hackyNewVal = parseInt(getValue(command[1]));
 							hackyOldVal = parseInt(getValue(command[2]));
 							var callback = function(){
+								incrementTimer(1);
 								hackywriteto.val(hackyNewVal+hackyOldVal);
-								if(!hackyItsASteppe)
-								step();
+								if(!hackyItsASteppe){
+									step();
+								} else {
+									$("#steppe").show();
+								}
 							};
 							shiftImageTo($("#minionone"),5, callback);
 						break;
 						case "SUB":
 							hackywriteto = getHTML(command[2]);
+							incrementTimer(1);
 							hackyNewVal = parseInt(getValue(command[1]));
 							hackyOldVal = parseInt(getValue(command[2]));
 							var callback = function(){
+								incrementTimer(1);
 								hackywriteto.val(hackyNewVal-hackyOldVal);
-								if(!hackyItsASteppe)
-								step();
+								if(!hackyItsASteppe){
+									step();
+								} else {
+									$("#steppe").show();
+								}
 							};
 							shiftImageTo($("#minionone"),5, callback);
 						break;
 						case "OUTPUT":
 							hackyNewVal = getValue(command[1]);
 							var callback = function(){
+								incrementTimer(4);
 								shiftImageTo($("#minionone"),4, null);
 								writeToOutput(hackyNewVal);
 								$("#output").addClass("focusedInput");
-								if(!hackyItsASteppe)
-								step();
+								if(!hackyItsASteppe){
+									step();
+								} else {
+									$("#steppe").show();
+								}
 							};
+							incrementTimer(1);
 							shiftImageTo($("#minionone"),5, callback);
 							break;
 						case "GOTO_IF": //GOTO_IF reg#2 4 instruction#2
 							var callback = function(){
+								incrementTimer(1);
 								if(getValue(command[1])==command[2]){
 									hackyCoreOne_IC = parseInt(command[3].split("#")[1])-1;
 									$("#coreone_ic").val(hackyCoreOne_IC);
 								}
-								if(!hackyItsASteppe)
+								if(!hackyItsASteppe){
 									step();
+								} else {
+									$("#steppe").show();
+								}
 							};
+							incrementTimer(1);
 							shiftImageTo($("#minionone"),5, callback);
 							break;
 						case "GOTO": //GOTO instruction#2
 							var callback = function(){
 								hackyCoreOne_IC = parseInt(command[1].split("#")[1])-1;
 								$("#coreone_ic").val(hackyCoreOne_IC);
-								if(!hackyItsASteppe)
+								if(!hackyItsASteppe){
 									step();
+								} else {
+									$("#steppe").show();
+								}
 							};
+							incrementTimer(1);
 							shiftImageTo($("#minionone"),5, callback);
+							break;
+						case "WORK":
+							incrementTimer(5);
+							hackyLap=parseInt(command[1]);
+							lap();
 							break;
 						default:
 							alert("Invalid Comamnd");
 							return;
 					}
+				}
+				var hackyLap = 0;
+				function lap(){
+					if(hackyLap==0){
+						if(!hackyItsASteppe){
+							step();
+						} else {
+							$("#steppe").show();
+						}
+						return;
+					}
+					var callback = function(){
+						hackyLap=hackyLap-1;
+						lap();
+					};
+					var img = $("#minionone"), container =$("#tomeasuredivsize");
+					img.transition({ x: 0, y: 0}).transition({ x: container.width()-img.width(), y: 0})
+					.transition({ x: container.width()-img.width(), y: container.height()-img.height()})
+					.transition({ x: 0, y: container.height()-img.height(),complete:callback});
 				}
 				function getValue(locationOrValue){
 					var parts = locationOrValue.split("#");
@@ -517,9 +611,11 @@
 		<div class="row rowdiv">
 		  <div class="col-md-4 titlebox greyedboxes">
 		  	<h2>Little Minion Computer</h2>
-		  	<p>
-		  		A simulation of how CPU aka little minion interacts with other components of the computer.
-		  	</p>
+		  	<h4><i>Zoom Out if screen is distorted</i></h4>
+		  	<button class="btn btn-warning" style="margin-top:10px;" id="ex1">Example input 1</button> 
+		  	<button class="btn btn-danger" style="margin-top:10px;" id="reset">Reset</button> 
+		  		<a class="btn btn-danger" style="margin-top:10px;" id="run">run</a>
+		  		<a class="btn btn-info" style="margin-top:10px;" id="steppe">step</a>
 		  </div>
 		  <div class="col-md-8 memorybox">
 		  	<h4><small>Memory aka RAM</small></h4>
@@ -600,10 +696,103 @@
 
 		<div class="row centerdiv">
 		  <div class="col-md-4 inputbox">
-		  	
 		  	<div class="form-inline">
-			  	<div id="instructionBox" class="row">
+		  		<center><h4><u>Instructions</u></h4></center>
+		  		<textarea class="form-control" id="input"></textarea>
+		  		<table id="inputTable" class="table"></table>
+		  	</div>
+		  </div>
+		  <div class="col-md-6"> <!-- Windows -->
+		  	<div style="width:100%; height:1%">
+		  		<svg height="1" width="500" class="movable">
+				  <line x1="250" y1="1" x2="400" y2="1" style="stroke:rgb(0,0,0);stroke-width:2" />
+				</svg>
+		  	</div>
+		  	<div style="width:100%; height:98%">
+		  		<div style="width:1%; height:100%; float:left; display:inline;">
+					<svg height="500" width="1" style="left:0;" class="movable">
+					  <line x1="1" y1="200" x2="1" y2="300" style="stroke:rgb(0,0,0);stroke-width:2" />
+					</svg>
+		  		</div>
+		  		<div style="width:98%; height:100%; float:left; display:inline;" id="tomeasuredivsize">
+		  			<!-- Little man computer box-->
+		  			<div id="calculatorbox1">
+		  				<small style="float:left; width:100%;">Core One</small>
+		  				<hr>
+					  	<div style="display:block; float:left; width:100%; margin:5px;">
+						  	<label class="inline-box" style="margin:5px 10px 0 5px;">Instruction Counter</label>
+						  	<input type="text" id="coreone_ic" class="form-control shortwidth inline-box" value="-" disabled/>
+						</div>
+		  				<hr>
+		  				<center><small>Registers</small></center>
+					  	<div class="memoryboxes inline-box">
+						  	<label class="inline-box">#0</label>
+						  	<input type="text" class="form-control shortwidth inline-box regone0 regInput">
+					  	</div>
+					  	<div class="memoryboxes inline-box">
+						  	<label class="inline-box">#1</label>
+						  	<input type="text" class="form-control shortwidth inline-box regone1 regInput">
+					  	</div>
+					  	<div class="memoryboxes inline-box">
+						  	<label class="inline-box">#2</label>
+						  	<input type="text" class="form-control shortwidth inline-box regone2 regInput">
+					  	</div>
+					  	<div class="memoryboxes inline-box">
+						  	<label class="inline-box">#3</label>
+						  	<input type="text" class="form-control shortwidth inline-box regone3 regInput">
+					  	</div>
+		  			</div>
+		  			<div id="calculatorbox2" style="display:none;">
+		  				<small style="float:left; width:100%;">Core Two</small>
+		  				<hr>
+						  	<div style="display:block; float:left; width:100%; margin:5px;">
+							  	<label class="inline-box" style="margin:5px 10px 0 5px;">Instruction Counter</label>
+							  	<input type="text" id="coretwo_ic" class="form-control shortwidth inline-box" value="-"/>
+							</div>
+		  				<hr>
+		  				<center><small>Registers</small></center>
+					  	<div class="memoryboxes inline-box">
+						  	<label class="inline-box">#0</label>
+						  	<input type="text" class="form-control shortwidth inline-box regtwo0 regInput">
+					  	</div>
+					  	<div class="memoryboxes inline-box">
+						  	<label class="inline-box">#1</label>
+						  	<input type="text" class="form-control shortwidth inline-box regtwo1 regInput">
+					  	</div>
+					  	<div class="memoryboxes inline-box">
+						  	<label class="inline-box">#2</label>
+						  	<input type="text" class="form-control shortwidth inline-box regtwo2 regInput">
+					  	</div>
+					  	<div class="memoryboxes inline-box">
+						  	<label class="inline-box">#3</label>
+						  	<input type="text" class="form-control shortwidth inline-box regtwo3 regInput">
+					  	</div>
+		  			</div>
+		  			<img src="img/HC_Minion_Icon.png" class="movableMinion" id="minionone"/>
+		  		</div>
+		  		<div style="width:1%; height:100%; float:left; display:inline;">
+					<svg height="500" width="1" style="right:0;" class="movable">
+					  <line x1="1" y1="200" x2="1" y2="300" style="stroke:rgb(0,0,0);stroke-width:2" />
+					</svg>
+		  		</div>
+			</div>
+			<div style="width:100%; height:1%">
+				<svg height="1" width="500" style="bottom:0;" class="movable">
+				  <line x1="250" y1="1" x2="400" y2="1" style="stroke:rgb(0,0,0);stroke-width:2" />
+				</svg>
+		  	</div>
+		  </div>
+		  <div class="col-md-2 outputbox">
+		  	
+		  	<h4><small>Output</small></h4>
+		  	<textarea class="form-control" disabled id="output"></textarea>
+		  </div>
+		</div>
 
+		<div class="row rowdiv">
+		  <div class="col-md-4 greyedboxes form-inline" style="padding-left:30px;">
+		  <center><h1 id="timer"></h1></center>
+		  <div id="instructionBox" class="row">
 			  		<div style="margin: 10px 0 0 10px;">
 				  		<label>Add instructions</label>
 				  		<div class="form-group">
@@ -918,110 +1107,7 @@
 						</select>
 						<a class="btn btn-success" id="actionwork">Add</a>
 			  		</div>
-				<hr>	
 			  	</div>
-		  		<center><h4><u>Instructions</u></h4></center>
-		  		<textarea class="form-control" id="input"></textarea>
-		  		<table id="inputTable" class="table"></table>
-		  		<a class="btn btn-danger" style="margin-top:10px;" id="run">run</a>
-		  		<a class="btn btn-info" style="margin-top:10px; float:right;" id="steppe">step</a>
-		  	</div>
-		  </div>
-		  <div class="col-md-6"> <!-- Windows -->
-		  	<div style="width:100%; height:1%">
-		  		<svg height="1" width="500" class="movable">
-				  <line x1="250" y1="1" x2="400" y2="1" style="stroke:rgb(0,0,0);stroke-width:2" />
-				</svg>
-		  	</div>
-		  	<div style="width:100%; height:98%">
-		  		<div style="width:1%; height:100%; float:left; display:inline;">
-					<svg height="500" width="1" style="left:0;" class="movable">
-					  <line x1="1" y1="200" x2="1" y2="300" style="stroke:rgb(0,0,0);stroke-width:2" />
-					</svg>
-		  		</div>
-		  		<div style="width:98%; height:100%; float:left; display:inline;" id="tomeasuredivsize">
-		  			<!-- Little man computer box-->
-		  			<div id="calculatorbox1">
-		  				<small style="float:left; width:100%;">Core One</small>
-		  				<hr>
-					  	<div style="display:block; float:left; width:100%; margin:5px;">
-						  	<label class="inline-box" style="margin:5px 10px 0 5px;">Instruction Counter</label>
-						  	<input type="text" id="coreone_ic" class="form-control shortwidth inline-box" value="-" disabled/>
-						</div>
-		  				<hr>
-		  				<center><small>Registers</small></center>
-					  	<div class="memoryboxes inline-box">
-						  	<label class="inline-box">#0</label>
-						  	<input type="text" class="form-control shortwidth inline-box regone0 regInput">
-					  	</div>
-					  	<div class="memoryboxes inline-box">
-						  	<label class="inline-box">#1</label>
-						  	<input type="text" class="form-control shortwidth inline-box regone1 regInput">
-					  	</div>
-					  	<div class="memoryboxes inline-box">
-						  	<label class="inline-box">#2</label>
-						  	<input type="text" class="form-control shortwidth inline-box regone2 regInput">
-					  	</div>
-					  	<div class="memoryboxes inline-box">
-						  	<label class="inline-box">#3</label>
-						  	<input type="text" class="form-control shortwidth inline-box regone3 regInput">
-					  	</div>
-		  			</div>
-		  			<div id="calculatorbox2" style="display:none;">
-		  				<small style="float:left; width:100%;">Core Two</small>
-		  				<hr>
-						  	<div style="display:block; float:left; width:100%; margin:5px;">
-							  	<label class="inline-box" style="margin:5px 10px 0 5px;">Instruction Counter</label>
-							  	<input type="text" id="coretwo_ic" class="form-control shortwidth inline-box" value="-"/>
-							</div>
-		  				<hr>
-		  				<center><small>Registers</small></center>
-					  	<div class="memoryboxes inline-box">
-						  	<label class="inline-box">#0</label>
-						  	<input type="text" class="form-control shortwidth inline-box regtwo0 regInput">
-					  	</div>
-					  	<div class="memoryboxes inline-box">
-						  	<label class="inline-box">#1</label>
-						  	<input type="text" class="form-control shortwidth inline-box regtwo1 regInput">
-					  	</div>
-					  	<div class="memoryboxes inline-box">
-						  	<label class="inline-box">#2</label>
-						  	<input type="text" class="form-control shortwidth inline-box regtwo2 regInput">
-					  	</div>
-					  	<div class="memoryboxes inline-box">
-						  	<label class="inline-box">#3</label>
-						  	<input type="text" class="form-control shortwidth inline-box regtwo3 regInput">
-					  	</div>
-		  			</div>
-		  			<img src="img/HC_Minion_Icon.png" class="movableMinion" id="minionone"/>
-		  		</div>
-		  		<div style="width:1%; height:100%; float:left; display:inline;">
-					<svg height="500" width="1" style="right:0;" class="movable">
-					  <line x1="1" y1="200" x2="1" y2="300" style="stroke:rgb(0,0,0);stroke-width:2" />
-					</svg>
-		  		</div>
-			</div>
-			<div style="width:100%; height:1%">
-				<svg height="1" width="500" style="bottom:0;" class="movable">
-				  <line x1="250" y1="1" x2="400" y2="1" style="stroke:rgb(0,0,0);stroke-width:2" />
-				</svg>
-		  	</div>
-		  </div>
-		  <div class="col-md-2 outputbox">
-		  	
-		  	<h4><small>Output</small></h4>
-		  	<textarea class="form-control" disabled id="output"></textarea>
-		  </div>
-		</div>
-
-		<div class="row rowdiv">
-		  <div class="col-md-4 greyedboxes" style="padding:20px;">
-		  	<button class="btn btn-warning" id="ex1">Example input 1</button> 
-		  	<button class="btn btn-danger" id="reset">Reset</button> 
-		  	<p> <small>
-		  		Terms used in this LMC might not be the exact terms used by a computer. It is intended to be simple and easy to understand.
-		  		</small>
-		  	</p>
 		  </div>
 		  <div class="col-md-8 harddiskbox">
 		  	<h4><small>Hard Disk</small></h4>
