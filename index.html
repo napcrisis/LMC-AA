@@ -9,6 +9,7 @@
 
 		<!-- Latest compiled and minified JavaScript -->
 		<script src="js/bootstrap.min.js"></script>
+		<script src="js/jquery.transit.min.js"></script>
 		<title>Little Minion Computer</title>
 		<style>
 			html, body { height: 100%; width: 100%; margin: 0; }
@@ -16,7 +17,7 @@
 
 			.greyedboxes { background: #999; height: 100%; }
 			.memorybox { border-bottom: 1px solid grey; height: 100%; }
-			.inputbox { padding-left:30px; border-right: 1px solid grey; height: 100%; }
+			.inputbox { padding-left:30px; border-right: 1px solid grey; height: 470px; overflow-y:scroll;}
 			.outputbox { border-left: 1px solid grey; height: 100%; }
 			.harddiskbox { border-top: 1px solid grey; height: 100%; }
 
@@ -30,11 +31,12 @@
 			.inline-box { diplay:inline; float:left; }
 
 			.movable { position:absolute; }
+			.movableMinion { position:absolute; width: 70px; height: 70px;}
 			#input { height: 55%; width:100%; }
 			#output { height: 90%; width:100%; }
 
-			#calculatorbox1{height:300px; width:225px; left: 100px; top:50px; position: absolute; background: #BAD0EF; opacity:0.6; border: 1px dashed;}
-			#calculatorbox2{height:300px; width:225px; left: 400px; top:50px; position: absolute; background: #BAD0EF; opacity:0.6; border: 1px dashed;}
+			#calculatorbox1{height:250px; width:225px; left: 250px; top:100px; position: absolute; background: #BAD0EF; opacity:0.6; border: 1px dashed;}
+			#calculatorbox2{height:250px; width:225px; left: 400px; top:100px; position: absolute; background: #BAD0EF; opacity:0.6; border: 1px dashed;}
 			.instructionbox {margin: 5px 0 0 10px;}
 			.focusedInput {
 			    border-color: #ccc;
@@ -44,6 +46,9 @@
 			    -webkit-box-shadow: 0 0 8px rgba(82, 168, 236, .6);
 			    box-shadow: 0 0 8px rgba(82, 168, 236, .6)
 			}
+			.yellowHighlight{
+				background-color: #FFFFE0;
+			} 
 		</style>
 		<script>
 			$(function(){
@@ -56,6 +61,8 @@
 					$("#subtract").hide();
 					$("#work").hide();
 					$("#outputbox").hide();
+					$("#Goto_if").hide();
+					$("#Goto").hide();
 					switch($("#instruction").val()) {
 					    case "Write":
 					    	$("#write").show();
@@ -81,6 +88,12 @@
 					    case "Work":
 					    	$("#work").show();
 					        break;
+					    case "Goto if":
+					    	$("#Goto_if").show();
+					    	break;
+					    case "Goto":
+					    	$("#Goto").show();
+					    	break;
 					}
 				});
 				$("#actionwrite").click(function(){
@@ -160,6 +173,24 @@
 					}
 					writeToInput("WORK "+value);
 				});
+				$("#actiongoto").click(function(){
+					var register = $("#Goto_if").find('.register').first().val();
+					var checkValue = $("#Goto_if").find('.value').first().val();
+					var instructionValue = $("#Goto_if").find('.instruction_value').first().val();
+					if(register=="Register" || checkValue=="Values" || instructionValue=="Line"){
+						alert("Please input required fields.");
+						return;
+					}
+					writeToInput("GOTO_IF reg"+register+" "+checkValue+" instruction#"+instructionValue);
+				});
+				$("#actiongotostr").click(function(){
+					var instructionValue = $("#Goto").find('.instruction_value').first().val();
+					if(instructionValue=="Line"){
+						alert("Please input required fields.");
+						return;
+					}
+					writeToInput("GOTO instruction#"+instructionValue);
+				});
 
 				$("#cod").hide();
 				$("#read").hide();
@@ -168,6 +199,8 @@
 				$("#subtract").hide();
 				$("#outputbox").hide();
 				$("#work").hide();
+				$("#Goto_if").hide();
+				$("#Goto").hide();
 
 				function writeToOutput(str){
 					var input = "";
@@ -185,56 +218,206 @@
 					input += str;
 					$("#input").val(input);
 				}
+				$("#reset").click(function(){
+					reset(true);
+				});
+				function reset(clearinput){
+					if(clearinput)
+						$("#input").val("");
+					$("#output").val("");
+					$(".memoryInput").each(function(){
+						$(this).val("0");
+					});
+					$(".hdInput").each(function(){
+						$(this).val("0");
+					});
+					$(".regInput").each(function(){
+						$(this).val("0");
+					});
+					hackyCoreOne_IC = "-";
+					$("#coreone_ic").val(hackyCoreOne_IC);
+					$("#instruction").val("Write");
+				}
+				shiftImageTo($("#minionone"),3);
 				$("#run").click(function(){
 					if($("#input").val()!=""){
+						transformIntoTable();
+						reset(false);
 						$("#output").val("");
-						writeToOutput("Running instructions");
-						var commands = $("#input").val();
-						commands = commands.split("\n");
-						for(i = 0; i < commands.length; i++){
-							var command = commands[i];
-							console.log(command);
-							command = command.split(" ");
-							// INSTEAD OF PAUSING, CAN CONSIDER ANIMATION AS WELL. http://stackoverflow.com/questions/8111232/javascript-function-to-execute-at-a-later-point-in-time-once-variables-updated
-							$("#coreone_ic").val(i);
-							clearHighlights();
-							if(command.length>=3){
-								highlight(command[2]);
-							} 
-							highlight(command[1]);
-							switch(command[0]){
-								case "WRITE":
-								case "COPY_TO_DISK":
-								case "READ":
-								case "COPY_TO_MEMORY":
-									var writeTo = getHTML(command[2]);
-									var newVal = getValue(command[1]);
-									writeTo.val(newVal);
-								break;
-								case "ADD":
-									var writeTo = getHTML(command[2]);
-									var newVal = parseInt(getValue(command[1]));
-									var oldVal = parseInt(getValue(command[2]));
-									writeTo.val(newVal+oldVal);
-								break;
-								case "SUB":
-									var writeTo = getHTML(command[2]);
-									var newVal = parseInt(getValue(command[1]));
-									var oldVal = parseInt(getValue(command[2]));
-									writeTo.val(newValoldVal);
-								break;
-								case "OUTPUT":
-									var newVal = getValue(command[1]);
-									writeToOutput(newVal);
-									$("#output").addClass("focusedInput");
-								break;
-								default:
-									alert("Invalid Comamnd");
-									return;
-							}
-						}
+						shiftImageTo($("#minionone"),3,null);
+						hackyCoreOne_IC = -1;
+						$("#coreone_ic").val(hackyCoreOne_IC);
+						$("#run").hide();
+						$("#steppe").hide();
+						hackyItsASteppe = false;
+						step();
 					}
 				});
+				$("#steppe").click(function(){
+					if(hackyCoreOne_IC=="-"){
+						transformIntoTable();
+						reset(false);
+						hackyCoreOne_IC = -1;
+						$("#coreone_ic").val(hackyCoreOne_IC);
+					}
+					$("#run").hide();
+					hackyItsASteppe = true;
+					step();
+				});
+				$("#input").show();
+				$("#inputTable").hide();
+				function transformIntoTable(){
+					$("#inputTable").empty();
+					$("#input").hide();
+					$("#inputTable").show();
+					$("#instructionBox").hide();
+					var commands = $("#input").val().split("\n");
+					for(i=0;i<commands.length;i++){
+						var line = commands[i];
+						var row = $("<tr/>").addClass("instrRow"+i).addClass("instrRow");
+						$("<td/>").text(i).appendTo(row);
+						$("<td/>").text(line).appendTo(row);
+						row.appendTo($("#inputTable"));
+					}
+
+				}
+				var hackywriteto, hackyOldVal, hackyNewVal, hackyItsASteppe, hackyCoreOne_IC;
+				function step(){
+					var commands = $("#input").val();
+					commands = commands.split("\n");
+					hackyCoreOne_IC = hackyCoreOne_IC+1;
+					$("#coreone_ic").val(hackyCoreOne_IC); // increment running core by 1
+					$(".instrRow").each(function(){
+						$(this).removeClass("yellowHighlight");
+					});
+					$(".instrRow"+$("#coreone_ic").val()).addClass("yellowHighlight");
+					
+					if(commands.length<=hackyCoreOne_IC){ // terminate condition
+						hackyCoreOne_IC = "-";
+						$("#coreone_ic").val(hackyCoreOne_IC);
+						$("#steppe").show();
+						$("#run").show();
+						$("#inputTable").hide();
+						$("#input").show();
+						$("#instructionBox").show();
+						return;
+					}
+					clearHighlights();
+					var command = commands[$("#coreone_ic").val()]; // get line of instruction to run
+					command = command.split(" "); 
+
+					if(command.length>=3){
+						highlight(command[2]);
+					}
+					highlight(command[1]);
+
+					switch(command[0]){ // shiftImageTo($("#minionone"),3); 1:memory, 2: harddisk, 3:input, 4:output, 5:coreone, 6:coretwo
+						case "WRITE":
+							hackywriteto = getHTML(command[2]);
+							var newVal = getValue(command[1]);
+							var callback = function(){
+								shiftImageTo($("#minionone"),1);
+								hackywriteto.val(newVal);
+								if(!hackyItsASteppe)
+								step();
+							};
+							if(command[1].indexOf("#") >= 0) { // is constants
+								shiftImageTo($("#minionone"),5, callback);
+							} else { // comes from register
+								shiftImageTo($("#minionone"),3, callback);
+							}
+						break;
+						case "COPY_TO_DISK":
+							hackywriteto = getHTML(command[2]);
+							var newVal = getValue(command[1]);
+							var callback = function(){
+								shiftImageTo($("#minionone"),2);
+								hackywriteto.val(newVal);
+								if(!hackyItsASteppe)
+								step();
+							};
+							shiftImageTo($("#minionone"),1, callback);
+						break;
+						case "READ":
+							hackywriteto = getHTML(command[2]);
+							var newVal = getValue(command[1]);
+							var callback = function(){
+								shiftImageTo($("#minionone"),5);
+								hackywriteto.val(newVal);
+								if(!hackyItsASteppe)
+								step();
+							};
+							shiftImageTo($("#minionone"),1,callback);
+						break;
+						case "COPY_TO_MEMORY":
+							hackywriteto = getHTML(command[2]);
+							var newVal = getValue(command[1]);
+							var callback = function(){
+								shiftImageTo($("#minionone"),1, null);
+								hackywriteto.val(newVal);
+								if(!hackyItsASteppe)
+								step();
+							};
+							shiftImageTo($("#minionone"),2,callback);
+						break;
+						case "ADD":
+							hackywriteto = getHTML(command[2]);
+							hackyNewVal = parseInt(getValue(command[1]));
+							hackyOldVal = parseInt(getValue(command[2]));
+							var callback = function(){
+								hackywriteto.val(hackyNewVal+hackyOldVal);
+								if(!hackyItsASteppe)
+								step();
+							};
+							shiftImageTo($("#minionone"),5, callback);
+						break;
+						case "SUB":
+							hackywriteto = getHTML(command[2]);
+							hackyNewVal = parseInt(getValue(command[1]));
+							hackyOldVal = parseInt(getValue(command[2]));
+							var callback = function(){
+								hackywriteto.val(hackyNewVal-hackyOldVal);
+								if(!hackyItsASteppe)
+								step();
+							};
+							shiftImageTo($("#minionone"),5, callback);
+						break;
+						case "OUTPUT":
+							hackyNewVal = getValue(command[1]);
+							var callback = function(){
+								shiftImageTo($("#minionone"),4, null);
+								writeToOutput(hackyNewVal);
+								$("#output").addClass("focusedInput");
+								if(!hackyItsASteppe)
+								step();
+							};
+							shiftImageTo($("#minionone"),5, callback);
+							break;
+						case "GOTO_IF": //GOTO_IF reg#2 4 instruction#2
+							var callback = function(){
+								if(getValue(command[1])==command[2]){
+									hackyCoreOne_IC = parseInt(command[3].split("#")[1])-1;
+									$("#coreone_ic").val(hackyCoreOne_IC);
+								}
+								if(!hackyItsASteppe)
+									step();
+							};
+							shiftImageTo($("#minionone"),5, callback);
+							break;
+						case "GOTO": //GOTO instruction#2
+							var callback = function(){
+								hackyCoreOne_IC = parseInt(command[1].split("#")[1])-1;
+								$("#coreone_ic").val(hackyCoreOne_IC);
+								if(!hackyItsASteppe)
+									step();
+							};
+							shiftImageTo($("#minionone"),5, callback);
+							break;
+						default:
+							alert("Invalid Comamnd");
+							return;
+					}
+				}
 				function getValue(locationOrValue){
 					var parts = locationOrValue.split("#");
 					if(parts.length<2){
@@ -291,6 +474,41 @@
 						break;
 					}
 				}
+				function shiftImageTo(img,place,fncallback){ // 1:memory, 2: harddisk, 3:input, 4:output, 5:coreone, 6:coretwo
+					var xaxis = 0, yaxis = 0;
+					switch(place){
+						case 1:
+							xaxis = $("#tomeasuredivsize").width()/2-img.width()/2;
+							break;
+						case 2:
+							xaxis = $("#tomeasuredivsize").width()/2-img.width()/2;
+							yaxis = $("#tomeasuredivsize").height()-img.height();
+							break;
+						case 3:
+							yaxis = $("#tomeasuredivsize").height()/2-img.height()/2;
+							break;
+						case 4:
+							yaxis = $("#tomeasuredivsize").height()/2-img.height()/2;
+							xaxis = $("#tomeasuredivsize").width()-img.width();
+							break;
+						case 5: 
+							var pos = $("#calculatorbox1").position();
+							yaxis = pos.top + $("#calculatorbox1").height()-img.height()-10;
+							xaxis = pos.left + $("#calculatorbox1").width()/2-img.width()/2-20;
+							break;
+						case 6: 
+							var pos = $("#calculatorbox2").position();
+							yaxis = pos.top + $("#calculatorbox2").height()-img.height()-10;
+							xaxis = pos.left + $("#calculatorbox2").width()/2-img.width()/2-20;
+							break;
+					}
+
+					img.transition({ x: xaxis, y: yaxis, complete:fncallback });
+				}
+				$("#ex1").click(function(){
+					$("#input").val("WRITE 2 mem#0\nWRITE 5 mem#1\nREAD mem#0 reg#0\nREAD mem#1 reg#1\nADD reg#0 reg#2\nOUTPUT reg#2\nGOTO_IF reg#2 10 instruction#8\nGOTO instruction#4\nWRITE reg#2 mem#5\nCOPY_TO_DISK mem#5 hd#0");
+				});
+				reset(true);
 			});
 		</script>
 	</head>
@@ -303,104 +521,106 @@
 		  		A simulation of how CPU aka little minion interacts with other components of the computer.
 		  	</p>
 		  </div>
-		  <div class="col-md-6 memorybox">
+		  <div class="col-md-8 memorybox">
 		  	<h4><small>Memory aka RAM</small></h4>
 		  	<div class="memoryboxes inline-box">
 			  	<label class="inline-box">#0</label>
-			  	<input type="text" class="form-control shortwidth inline-box mem0">
+			  	<input type="text" class="form-control shortwidth inline-box mem0 memoryInput">
 		  	</div>
 		  	<div class="memoryboxes inline-box">
 			  	<label class="inline-box">#1</label>
-			  	<input type="text" class="form-control shortwidth inline-box mem1">
+			  	<input type="text" class="form-control shortwidth inline-box mem1 memoryInput">
 		  	</div>
 		  	<div class="memoryboxes inline-box">
 			  	<label class="inline-box">#2</label>
-			  	<input type="text" class="form-control shortwidth inline-box mem2">
+			  	<input type="text" class="form-control shortwidth inline-box mem2 memoryInput">
 		  	</div>
 		  	<div class="memoryboxes inline-box">
 			  	<label class="inline-box">#3</label>
-			  	<input type="text" class="form-control shortwidth inline-box mem3">
+			  	<input type="text" class="form-control shortwidth inline-box mem3 memoryInput">
 		  	</div>
 		  	<div class="memoryboxes inline-box">
 			  	<label class="inline-box">#4</label>
-			  	<input type="text" class="form-control shortwidth inline-box mem4">
+			  	<input type="text" class="form-control shortwidth inline-box mem4 memoryInput">
 		  	</div>
 		  	<div class="memoryboxes inline-box">
 			  	<label class="inline-box">#5</label>
-			  	<input type="text" class="form-control shortwidth inline-box mem5">
+			  	<input type="text" class="form-control shortwidth inline-box mem5 memoryInput">
 		  	</div>
 		  	<div class="memoryboxes inline-box">
 			  	<label class="inline-box">#6</label>
-			  	<input type="text" class="form-control shortwidth inline-box mem6">
+			  	<input type="text" class="form-control shortwidth inline-box mem6 memoryInput">
 		  	</div>
 		  	<div class="memoryboxes inline-box">
 			  	<label class="inline-box">#7</label>
-			  	<input type="text" class="form-control shortwidth inline-box mem7">
+			  	<input type="text" class="form-control shortwidth inline-box mem7 memoryInput">
 		  	</div>
 		  	<div class="memoryboxes inline-box">
 			  	<label class="inline-box">#8</label>
-			  	<input type="text" class="form-control shortwidth inline-box mem8">
+			  	<input type="text" class="form-control shortwidth inline-box mem8 memoryInput">
 		  	</div>
 		  	<div class="memoryboxes inline-box">
 			  	<label class="inline-box">#9</label>
-			  	<input type="text" class="form-control shortwidth inline-box mem9">
+			  	<input type="text" class="form-control shortwidth inline-box mem9 memoryInput">
 		  	</div>
 		  	<div class="memoryboxes inline-box">
 			  	<label class="inline-box">#10</label>
-			  	<input type="text" class="form-control shortwidth inline-box mem10">
+			  	<input type="text" class="form-control shortwidth inline-box mem10 memoryInput">
 		  	</div>
 		  	<div class="memoryboxes inline-box">
 			  	<label class="inline-box">#11</label>
-			  	<input type="text" class="form-control shortwidth inline-box mem11">
+			  	<input type="text" class="form-control shortwidth inline-box mem11 memoryInput">
 		  	</div>
 		  	<div class="memoryboxes inline-box">
 			  	<label class="inline-box">#12</label>
-			  	<input type="text" class="form-control shortwidth inline-box mem12">
+			  	<input type="text" class="form-control shortwidth inline-box mem12 memoryInput">
 		  	</div>
 		  	<div class="memoryboxes inline-box">
 			  	<label class="inline-box">#13</label>
-			  	<input type="text" class="form-control shortwidth inline-box mem13">
+			  	<input type="text" class="form-control shortwidth inline-box mem13 memoryInput">
 		  	</div>
 		  	<div class="memoryboxes inline-box">
 			  	<label class="inline-box">#14</label>
-			  	<input type="text" class="form-control shortwidth inline-box mem14">
+			  	<input type="text" class="form-control shortwidth inline-box mem14 memoryInput">
 		  	</div>
 		  	<div class="memoryboxes inline-box">
 			  	<label class="inline-box">#15</label>
-			  	<input type="text" class="form-control shortwidth inline-box mem15">
+			  	<input type="text" class="form-control shortwidth inline-box mem15 memoryInput">
 		  	</div>
 		  	<div class="memoryboxes inline-box">
 			  	<label class="inline-box">#16</label>
-			  	<input type="text" class="form-control shortwidth inline-box mem16">
+			  	<input type="text" class="form-control shortwidth inline-box mem16 memoryInput">
 		  	</div>
 		  	<div class="memoryboxes inline-box">
 			  	<label class="inline-box">#17</label>
-			  	<input type="text" class="form-control shortwidth inline-box mem17">
+			  	<input type="text" class="form-control shortwidth inline-box mem17 memoryInput">
 		  	</div>
 		  </div>
-		  <div class="col-md-2 greyedboxes"></div>
 		</div>
 
 		<div class="row centerdiv">
 		  <div class="col-md-4 inputbox">
 		  	
 		  	<div class="form-inline">
-		  		<div style="margin: 10px 0 0 10px;">
-			  		<label>Add instructions</label>
-			  		<div class="form-group">
-					  	<select class="form-control" id="instruction">
-						  <option>Write</option>
-						  <option>Copy to disk</option>
-						  <option>Copy to memory</option>
-						  <option>Read</option>
-						  <option>Add</option>
-						  <option>Subtract</option>
-						  <option>Output</option>
-						  <option>Work</option>
-						</select>
-				  	</div>
-			  	</div>
 			  	<div id="instructionBox" class="row">
+
+			  		<div style="margin: 10px 0 0 10px;">
+				  		<label>Add instructions</label>
+				  		<div class="form-group">
+						  	<select class="form-control" id="instruction">
+							  <option>Write</option>
+							  <option>Copy to disk</option>
+							  <option>Copy to memory</option>
+							  <option>Read</option>
+							  <option>Add</option>
+							  <option>Subtract</option>
+							  <option>Output</option>
+							  <option>Work</option>
+							  <option>Goto if</option>
+							  <option>Goto</option>
+							</select>
+					  	</div>
+				  	</div>
 			  		<div id="write" class="instructionbox">
 			  			<label>Write </label>
 			  			<select class="form-control value">
@@ -625,10 +845,11 @@
 						</select>
 						<a class="btn btn-success" id="actionoutput">Add</a>
 			  		</div>
-			  		<div id="work" class="instructionbox">
-			  			<label>Work </label>
-			  			<select class="form-control value">
-						  <option>Values</option>
+			  		<div id="Goto_if" class="instructionbox">
+			  			<label>Goto Instruction at</label>
+			  			<select class="form-control instruction_value">
+						  <option>Line</option>
+						  <option>0</option>
 						  <option>1</option>
 						  <option>2</option>
 						  <option>3</option>
@@ -638,15 +859,72 @@
 						  <option>7</option>
 						  <option>8</option>
 						  <option>9</option>
-						  <option>10</option>
+						</select>
+						<label> if </label>
+					  	<select class="form-control register">
+						  <option>Register</option>
+						  <option>#0</option>
+						  <option>#1</option>
+						  <option>#2</option>
+						  <option>#3</option>
+						</select>
+						<label> = </label>
+			  			<select class="form-control value">
+						  <option>Values</option>
+						  <option>0</option>
+						  <option>1</option>
+						  <option>2</option>
+						  <option>3</option>
+						  <option>4</option>
+						  <option>5</option>
+						  <option>6</option>
+						  <option>7</option>
+						  <option>8</option>
+						  <option>9</option>
+						</select>
+						<a class="btn btn-success" id="actiongoto">Add</a>
+			  		</div>
+			  		<div id="Goto" class="instructionbox">
+			  			<label>Goto Instruction </label>
+			  			<select class="form-control instruction_value">
+						  <option>Line</option>
+						  <option>0</option>
+						  <option>1</option>
+						  <option>2</option>
+						  <option>3</option>
+						  <option>4</option>
+						  <option>5</option>
+						  <option>6</option>
+						  <option>7</option>
+						  <option>8</option>
+						  <option>9</option>
+						</select>
+						<a class="btn btn-success" id="actiongotostr">Add</a>
+			  		</div>
+			  		<div id="work" class="instructionbox">
+			  			<label>Work </label>
+			  			<select class="form-control value">
+						  <option>Values</option>
+						  <option>0</option>
+						  <option>1</option>
+						  <option>2</option>
+						  <option>3</option>
+						  <option>4</option>
+						  <option>5</option>
+						  <option>6</option>
+						  <option>7</option>
+						  <option>8</option>
+						  <option>9</option>
 						</select>
 						<a class="btn btn-success" id="actionwork">Add</a>
 			  		</div>
+				<hr>	
 			  	</div>
-				<hr>
 		  		<center><h4><u>Instructions</u></h4></center>
 		  		<textarea class="form-control" id="input"></textarea>
+		  		<table id="inputTable" class="table"></table>
 		  		<a class="btn btn-danger" style="margin-top:10px;" id="run">run</a>
+		  		<a class="btn btn-info" style="margin-top:10px; float:right;" id="steppe">step</a>
 		  	</div>
 		  </div>
 		  <div class="col-md-6"> <!-- Windows -->
@@ -661,68 +939,61 @@
 					  <line x1="1" y1="200" x2="1" y2="300" style="stroke:rgb(0,0,0);stroke-width:2" />
 					</svg>
 		  		</div>
-		  		<div style="width:98%; height:100%; float:left; display:inline;">
+		  		<div style="width:98%; height:100%; float:left; display:inline;" id="tomeasuredivsize">
 		  			<!-- Little man computer box-->
 		  			<div id="calculatorbox1">
 		  				<small style="float:left; width:100%;">Core One</small>
 		  				<hr>
 					  	<div style="display:block; float:left; width:100%; margin:5px;">
 						  	<label class="inline-box" style="margin:5px 10px 0 5px;">Instruction Counter</label>
-						  	<input type="text" id="coreone_ic" class="form-control shortwidth inline-box">
+						  	<input type="text" id="coreone_ic" class="form-control shortwidth inline-box" value="-" disabled/>
 						</div>
 		  				<hr>
 		  				<center><small>Registers</small></center>
 					  	<div class="memoryboxes inline-box">
 						  	<label class="inline-box">#0</label>
-						  	<input type="text" class="form-control shortwidth inline-box regone0">
+						  	<input type="text" class="form-control shortwidth inline-box regone0 regInput">
 					  	</div>
 					  	<div class="memoryboxes inline-box">
 						  	<label class="inline-box">#1</label>
-						  	<input type="text" class="form-control shortwidth inline-box regone1">
+						  	<input type="text" class="form-control shortwidth inline-box regone1 regInput">
 					  	</div>
 					  	<div class="memoryboxes inline-box">
 						  	<label class="inline-box">#2</label>
-						  	<input type="text" class="form-control shortwidth inline-box regone2">
+						  	<input type="text" class="form-control shortwidth inline-box regone2 regInput">
 					  	</div>
 					  	<div class="memoryboxes inline-box">
 						  	<label class="inline-box">#3</label>
-						  	<input type="text" class="form-control shortwidth inline-box regone3">
+						  	<input type="text" class="form-control shortwidth inline-box regone3 regInput">
 					  	</div>
 		  			</div>
-		  			<div id="calculatorbox2">
+		  			<div id="calculatorbox2" style="display:none;">
 		  				<small style="float:left; width:100%;">Core Two</small>
 		  				<hr>
 						  	<div style="display:block; float:left; width:100%; margin:5px;">
 							  	<label class="inline-box" style="margin:5px 10px 0 5px;">Instruction Counter</label>
-							  	<input type="text" id="coretwo_ic" class="form-control shortwidth inline-box">
+							  	<input type="text" id="coretwo_ic" class="form-control shortwidth inline-box" value="-"/>
 							</div>
 		  				<hr>
 		  				<center><small>Registers</small></center>
 					  	<div class="memoryboxes inline-box">
 						  	<label class="inline-box">#0</label>
-						  	<input type="text" class="form-control shortwidth inline-box regtwo0">
+						  	<input type="text" class="form-control shortwidth inline-box regtwo0 regInput">
 					  	</div>
 					  	<div class="memoryboxes inline-box">
 						  	<label class="inline-box">#1</label>
-						  	<input type="text" class="form-control shortwidth inline-box regtwo1">
+						  	<input type="text" class="form-control shortwidth inline-box regtwo1 regInput">
 					  	</div>
 					  	<div class="memoryboxes inline-box">
 						  	<label class="inline-box">#2</label>
-						  	<input type="text" class="form-control shortwidth inline-box regtwo2">
+						  	<input type="text" class="form-control shortwidth inline-box regtwo2 regInput">
 					  	</div>
 					  	<div class="memoryboxes inline-box">
 						  	<label class="inline-box">#3</label>
-						  	<input type="text" class="form-control shortwidth inline-box regtwo3">
+						  	<input type="text" class="form-control shortwidth inline-box regtwo3 regInput">
 					  	</div>
 		  			</div>
-			  		<svg height="50" width="50" style="left:0;" class="movable">
-					  <circle cx="27" cy="27" r="20" stroke="blue" stroke-width="2" fill="yellow" />
-					</svg>	
-
-
-			  		<svg height="50" width="50" style="bottom:0;" class="movable">
-					  <circle cx="27" cy="27" r="20" stroke="blue" stroke-width="2" fill="yellow" />
-					</svg>	
+		  			<img src="img/HC_Minion_Icon.png" class="movableMinion" id="minionone"/>
 		  		</div>
 		  		<div style="width:1%; height:100%; float:left; display:inline;">
 					<svg height="500" width="1" style="right:0;" class="movable">
@@ -745,91 +1016,87 @@
 
 		<div class="row rowdiv">
 		  <div class="col-md-4 greyedboxes" style="padding:20px;">
-		  	<button class="btn btn-warning">Example input 1</button> <br><br>
-		  	<button class="btn btn-success">Example input 2</button> <br><br>
-		  	<button class="btn btn-danger">Example input 3</button> 
-
-		  </div>
-		  <div class="col-md-6 harddiskbox">
-		  	<h4><small>Hard Disk</small></h4>
-		  	<div class="memoryboxes inline-box">
-			  	<label class="inline-box">#0</label>
-			  	<input type="text" class="form-control shortwidth inline-box hd0">
-		  	</div>
-		  	<div class="memoryboxes inline-box">
-			  	<label class="inline-box">#1</label>
-			  	<input type="text" class="form-control shortwidth inline-box hd1">
-		  	</div>
-		  	<div class="memoryboxes inline-box">
-			  	<label class="inline-box">#2</label>
-			  	<input type="text" class="form-control shortwidth inline-box hd2">
-		  	</div>
-		  	<div class="memoryboxes inline-box">
-			  	<label class="inline-box">#3</label>
-			  	<input type="text" class="form-control shortwidth inline-box hd3">
-		  	</div>
-		  	<div class="memoryboxes inline-box">
-			  	<label class="inline-box">#4</label>
-			  	<input type="text" class="form-control shortwidth inline-box hd4">
-		  	</div>
-		  	<div class="memoryboxes inline-box">
-			  	<label class="inline-box">#5</label>
-			  	<input type="text" class="form-control shortwidth inline-box hd5">
-		  	</div>
-		  	<div class="memoryboxes inline-box">
-			  	<label class="inline-box">#6</label>
-			  	<input type="text" class="form-control shortwidth inline-box hd6">
-		  	</div>
-		  	<div class="memoryboxes inline-box">
-			  	<label class="inline-box">#7</label>
-			  	<input type="text" class="form-control shortwidth inline-box hd7">
-		  	</div>
-		  	<div class="memoryboxes inline-box">
-			  	<label class="inline-box">#8</label>
-			  	<input type="text" class="form-control shortwidth inline-box hd8">
-		  	</div>
-		  	<div class="memoryboxes inline-box">
-			  	<label class="inline-box">#9</label>
-			  	<input type="text" class="form-control shortwidth inline-box hd9">
-		  	</div>
-		  	<div class="memoryboxes inline-box">
-			  	<label class="inline-box">#10</label>
-			  	<input type="text" class="form-control shortwidth inline-box hd10">
-		  	</div>
-		  	<div class="memoryboxes inline-box">
-			  	<label class="inline-box">#11</label>
-			  	<input type="text" class="form-control shortwidth inline-box hd11">
-		  	</div>
-		  	<div class="memoryboxes inline-box">
-			  	<label class="inline-box">#12</label>
-			  	<input type="text" class="form-control shortwidth inline-box hd12">
-		  	</div>
-		  	<div class="memoryboxes inline-box">
-			  	<label class="inline-box">#13</label>
-			  	<input type="text" class="form-control shortwidth inline-box hd13">
-		  	</div>
-		  	<div class="memoryboxes inline-box">
-			  	<label class="inline-box">#14</label>
-			  	<input type="text" class="form-control shortwidth inline-box hd14">
-		  	</div>
-		  	<div class="memoryboxes inline-box">
-			  	<label class="inline-box">#15</label>
-			  	<input type="text" class="form-control shortwidth inline-box hd15">
-		  	</div>
-		  	<div class="memoryboxes inline-box">
-			  	<label class="inline-box">#16</label>
-			  	<input type="text" class="form-control shortwidth inline-box hd16">
-		  	</div>
-		  	<div class="memoryboxes inline-box">
-			  	<label class="inline-box">#17</label>
-			  	<input type="text" class="form-control shortwidth inline-box hd17">
-		  	</div>
-		  </div>
-		  <div class="col-md-2 greyedboxes">
-		  	<p style="margin-top:100px;"> <small>
+		  	<button class="btn btn-warning" id="ex1">Example input 1</button> 
+		  	<button class="btn btn-danger" id="reset">Reset</button> 
+		  	<p> <small>
 		  		Terms used in this LMC might not be the exact terms used by a computer. It is intended to be simple and easy to understand.
 		  		</small>
 		  	</p>
+		  </div>
+		  <div class="col-md-8 harddiskbox">
+		  	<h4><small>Hard Disk</small></h4>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#0</label>
+			  	<input type="text" class="form-control shortwidth inline-box hd0 hdInput">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#1</label>
+			  	<input type="text" class="form-control shortwidth inline-box hd1 hdInput">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#2</label>
+			  	<input type="text" class="form-control shortwidth inline-box hd2 hdInput">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#3</label>
+			  	<input type="text" class="form-control shortwidth inline-box hd3 hdInput">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#4</label>
+			  	<input type="text" class="form-control shortwidth inline-box hd4 hdInput">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#5</label>
+			  	<input type="text" class="form-control shortwidth inline-box hd5 hdInput">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#6</label>
+			  	<input type="text" class="form-control shortwidth inline-box hd6 hdInput">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#7</label>
+			  	<input type="text" class="form-control shortwidth inline-box hd7 hdInput">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#8</label>
+			  	<input type="text" class="form-control shortwidth inline-box hd8 hdInput">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#9</label>
+			  	<input type="text" class="form-control shortwidth inline-box hd9 hdInput">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#10</label>
+			  	<input type="text" class="form-control shortwidth inline-box hd10 hdInput">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#11</label>
+			  	<input type="text" class="form-control shortwidth inline-box hd11 hdInput">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#12</label>
+			  	<input type="text" class="form-control shortwidth inline-box hd12 hdInput">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#13</label>
+			  	<input type="text" class="form-control shortwidth inline-box hd13 hdInput">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#14</label>
+			  	<input type="text" class="form-control shortwidth inline-box hd14 hdInput">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#15</label>
+			  	<input type="text" class="form-control shortwidth inline-box hd15 hdInput">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#16</label>
+			  	<input type="text" class="form-control shortwidth inline-box hd16 hdInput">
+		  	</div>
+		  	<div class="memoryboxes inline-box">
+			  	<label class="inline-box">#17</label>
+			  	<input type="text" class="form-control shortwidth inline-box hd17 hdInput">
+		  	</div>
 		  </div>
 		</div>
 	</body>
